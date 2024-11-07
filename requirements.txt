@@ -1,1 +1,2 @@
 movieposters==0.0.7
+pickle==0.0.1
