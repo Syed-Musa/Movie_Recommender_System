@@ -1,2 +1,2 @@
-movieposters
+movieposters==0.0.7
 pickle
