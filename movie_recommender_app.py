@@ -87,7 +87,12 @@ if st.button('Recommend'):
     for i, col in enumerate(cols):
         with col:
             st.image(posters[i] if posters[i] else "https://via.placeholder.com/150?text=No+Poster", width=150)
-            st.markdown(f"**{names[i]}**")
+            st.markdown(f"**{names[i]}**", unsafe_allow_html=True)
+            
+            search_query = names[i].replace(' ', '+')
+            watch_link = f"https://www.google.com/search?q=watch+{search_query}+movie+online"
+            st.markdown(f"[🔗 Watch Now]({watch_link})", unsafe_allow_html=True)
+            
 
 # -----------------------------
 # Footer
