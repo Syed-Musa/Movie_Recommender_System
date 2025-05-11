@@ -4,7 +4,10 @@ import pandas as pd
 import movieposters as mp
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# Fetch posters for a list of movies using multithreading
+# -----------------------------
+# Helper Functions
+# -----------------------------
+
 def fetch_posters(movie_names):
     with ThreadPoolExecutor(max_workers=5) as executor:
         futures = {executor.submit(mp.get_poster, movie_name): movie_name for movie_name in movie_names}
@@ -13,8 +16,8 @@ def fetch_posters(movie_names):
             movie_name = futures[future]
             try:
                 results[movie_name] = future.result()
-            except Exception as e:
-                results[movie_name] = None  # Handle error or return None if poster fetch fails
+            except Exception:
+                results[movie_name] = None
     return results
 
 def recommend(movie):
@@ -24,30 +27,70 @@ def recommend(movie):
     
     recommended_movies = [movies.iloc[i[0]].title for i in movies_list]
     
-    # Fetch posters with a spinner
     with st.spinner('Fetching movie posters...'):
         posters = fetch_posters(recommended_movies)
     
     return recommended_movies, [posters.get(movie, None) for movie in recommended_movies]
 
-# Load movie data and similarity matrix
+# -----------------------------
+# Load Data
+# -----------------------------
+
 movies_list = joblib.load('movies_dict.pkl')
 movies = pd.DataFrame(movies_list)
 similarity = joblib.load('similarity.pkl')
 
-# Streamlit UI
-st.header("Movie Recommender System")
-selected_movie_name = st.selectbox('Type or select a movie from dropdown', movies['title'].values)
+# -----------------------------
+# Page Configuration
+# -----------------------------
+
+st.set_page_config(page_title="Movie Recommender", layout="wide")
+
+# -----------------------------
+# Custom CSS Styling
+# -----------------------------
+
+st.markdown("""
+    <style>
+    .main {
+        background-color: #f0f2f6;
+    }
+    .title {
+        text-align: center;
+        font-size: 50px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 20px;
+    }
+    .footer {
+        position: fixed;
+        bottom: 10px;
+        width: 100%;
+        text-align: center;
+        font-size: 13px;
+        color: gray;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# -----------------------------
+# App UI
+# -----------------------------
+
+st.markdown("<div class='title'>🎬 Movie Recommender System</div>", unsafe_allow_html=True)
+
+selected_movie_name = st.selectbox('Search or select a movie:', movies['title'].values)
 
 if st.button('Recommend'):
     names, posters = recommend(selected_movie_name)
-    
     cols = st.columns(5)
     for i, col in enumerate(cols):
-        if i < len(names):
-            with col:
-                st.text(names[i])
-                if posters[i] is not None:
-                    st.image(posters[i])
-                else:
-                    st.text("Poster not available")
+        with col:
+            st.image(posters[i] if posters[i] else "https://via.placeholder.com/150?text=No+Poster", width=150)
+            st.markdown(f"**{names[i]}**")
+
+# -----------------------------
+# Footer
+# -----------------------------
+
+st.markdown("<div class='footer'>Made with ❤️ using Streamlit</div>", unsafe_allow_html=True)
